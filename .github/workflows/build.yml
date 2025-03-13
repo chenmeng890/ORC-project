@@ -25,7 +25,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
-      run: pyinstaller --onefile --windowed --name invoice_ocr main.py
+        pyinstaller --onefile --windowed --name invoice_ocr main.py
       
     - name: Upload artifact
       uses: actions/upload-artifact@v3
