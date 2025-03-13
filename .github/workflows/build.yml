@@ -33,3 +33,5 @@ jobs:
         name: invoice_ocr-windows
         path: dist/invoice_ocr.exe
         retention-days: 5
+        if-no-files-found: error
+        compression-level: 9
