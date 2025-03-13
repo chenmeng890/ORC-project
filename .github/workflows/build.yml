@@ -24,7 +24,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pyinstalle    - name: Build with PyInstaller
+        pip install pyinstaller
       run: pyinstaller --onefile --windowed --name invoice_ocr main.py
       
     - name: Upload artifact
