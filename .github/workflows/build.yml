@@ -28,7 +28,7 @@ jobs:
         pyinstaller --onefile --windowed --name invoice_ocr main.py
       
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: invoice_ocr-windows
         path: dist/invoice_ocr.exe
