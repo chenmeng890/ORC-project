@@ -36,17 +36,41 @@ class OCRProcessor:
 
     def process_pdf(self, pdf_path):
         try:
-            pages = convert_from_path(pdf_path)
+            # 设置转换参数以提高图像质量
+            pages = convert_from_path(
+                pdf_path,
+                dpi=300,  # 提高DPI以获取更清晰的图像
+                fmt='jpeg',
+                grayscale=False,  # 保持彩色以避免信息丢失
+                thread_count=2  # 使用多线程加速处理
+            )
+            
+            if not pages:
+                error_msg = f'PDF文件 {pdf_path} 转换失败：未能提取到页面'
+                logging.error(error_msg)
+                raise Exception(error_msg)
+                
             results = []
             with tempfile.NamedTemporaryFile(suffix='.jpg', delete=True) as temp_file:
-                for page in pages:
-                    # 将PDF页面转换为图片
-                    page.save(temp_file.name, 'JPEG')
-                    result = self.process_image(temp_file.name)
-                    results.extend(result)
+                for page_num, page in enumerate(pages, 1):
+                    try:
+                        # 优化图像保存质量
+                        page.save(temp_file.name, 'JPEG', quality=95)
+                        result = self.process_image(temp_file.name)
+                        if result:
+                            results.extend(result)
+                        else:
+                            logging.warning(f'PDF文件 {pdf_path} 第{page_num}页识别结果为空')
+                    except Exception as e:
+                        logging.error(f'处理PDF文件 {pdf_path} 第{page_num}页时出错：{str(e)}')
+                        continue
+                        
+            if not results:
+                logging.warning(f'PDF文件 {pdf_path} 未能成功识别任何内容')
             return results
         except Exception as e:
-            logging.error(f'处理PDF {pdf_path} 时出错：{str(e)}')
+            error_msg = f'处理PDF文件 {pdf_path} 时出错：{str(e)}'
+            logging.error(error_msg)
             return []
 
     def process_file(self, file_path):
