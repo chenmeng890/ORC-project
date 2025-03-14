@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QPushButton, QLineEdit, QLabel, QFileDialog,
-                             QProgressBar, QTextEdit)
+                             QProgressBar, QTextEdit, QSplitter)
 from PyQt5.QtCore import Qt
 from ocr.ocr_processor import OCRProcessor
 from data.excel_processor import ExcelProcessor
 import os
+import json
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -60,19 +61,31 @@ class MainWindow(QMainWindow):
         self.folder_path_input = QLineEdit()
         self.folder_select_btn = QPushButton('浏览')
         self.folder_select_btn.clicked.connect(self.select_folder)
+        self.open_folder_btn = QPushButton('打开文件夹')
+        self.open_folder_btn.clicked.connect(self.open_selected_folder)
         folder_layout.addWidget(self.folder_path_label)
         folder_layout.addWidget(self.folder_path_input)
         folder_layout.addWidget(self.folder_select_btn)
+        folder_layout.addWidget(self.open_folder_btn)
         layout.addLayout(folder_layout)
 
         # 进度条
         self.progress_bar = QProgressBar()
         layout.addWidget(self.progress_bar)
 
+        # 创建一个分割器来容纳两个文本显示区域
+        splitter = QSplitter(Qt.Vertical)
+        layout.addWidget(splitter)
+
         # 日志显示区域
         self.log_display = QTextEdit()
         self.log_display.setReadOnly(True)
-        layout.addWidget(self.log_display)
+        splitter.addWidget(self.log_display)
+
+        # OCR原始数据显示区域
+        self.ocr_data_display = QTextEdit()
+        self.ocr_data_display.setReadOnly(True)
+        splitter.addWidget(self.ocr_data_display)
 
         # 开始按钮
         self.start_btn = QPushButton('开始识别')
@@ -130,6 +143,12 @@ class MainWindow(QMainWindow):
             
             try:
                 ocr_result = self.ocr_processor.process_file(file_path)
+                # 显示OCR原始数据
+                self.ocr_data_display.append(f'文件：{filename}')
+                self.ocr_data_display.append('OCR识别结果：')
+                self.ocr_data_display.append(json.dumps(ocr_result, ensure_ascii=False, indent=2))
+                self.ocr_data_display.append('\n' + '-'*50 + '\n')
+                
                 self.excel_processor.add_result(filename, ocr_result)
                 processed_files += 1
                 self.progress_bar.setValue(processed_files)
@@ -152,3 +171,10 @@ class MainWindow(QMainWindow):
 
     def log_message(self, message):
         self.log_display.append(message)
+
+    def open_selected_folder(self):
+        folder_path = self.folder_path_input.text()
+        if folder_path and os.path.exists(folder_path):
+            os.system(f'open "{folder_path}"')
+        else:
+            self.log_display.append('错误：请先选择有效的文件夹')
