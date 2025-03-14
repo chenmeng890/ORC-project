@@ -17,13 +17,22 @@ class OCRProcessor:
 
     def process_image(self, image_path):
         try:
+            logging.info(f'开始处理图片：{image_path}')
             with open(image_path, 'rb') as fp:
                 image = fp.read()
+            logging.info('正在调用百度OCR API...')
             result = self.client.vatInvoice(image)
+            
+            if 'error_code' in result:
+                error_msg = f'百度API返回错误：错误码 {result["error_code"]}，错误信息：{result.get("error_msg", "未知错误")}'
+                logging.error(error_msg)
+                raise Exception(error_msg)
+            
+            logging.info(f'API调用成功，返回结果：{result}')
             return [result.get('words_result', {})] if 'words_result' in result else []
         except Exception as e:
             logging.error(f'处理图片 {image_path} 时出错：{str(e)}')
-            return []
+            raise e
 
     def process_pdf(self, pdf_path):
         try:
